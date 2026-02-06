@@ -252,16 +252,16 @@ export async function incrementCompactionCount(params: {
   if (!sessionStore || !sessionKey) {
     return undefined;
   }
-  const entry = sessionStore[sessionKey] ?? sessionEntry;
+  const entry = sessionStore[sessionKey] ?? sessionEntry; // 如果 sessionStore 中有 sessionKey 对应的 sessionEntry，就使用它；否则使用 sessionEntry。
   if (!entry) {
     return undefined;
   }
-  const nextCount = (entry.compactionCount ?? 0) + 1;
+  const nextCount = (entry.compactionCount ?? 0) + 1; // 如果 entry.compactionCount 存在，就使用它；否则使用 0。然后加 1。
   // Build update payload with compaction count and optionally updated token counts
   const updates: Partial<SessionEntry> = {
     compactionCount: nextCount,
     updatedAt: now,
-  };
+  }; // Partial<SessionEntry> 表示 SessionEntry 类型的子集，即 SessionEntry 中的某些属性是可选的。
   // If tokensAfter is provided, update the cached token counts to reflect post-compaction state
   if (tokensAfter != null && tokensAfter > 0) {
     updates.totalTokens = tokensAfter;

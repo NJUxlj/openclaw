@@ -22,12 +22,15 @@ function extractCompactInstructions(params: {
   ctx: import("../templating.js").MsgContext;
   cfg: OpenClawConfig;
   agentId?: string;
-  isGroup: boolean;
+  isGroup: boolean; //是否群聊
 }): string | undefined {
+  /*
+  作用：从消息文本中提取 /compact 后面用户给的“自定义压缩指令”。
+  */
   const raw = stripStructuralPrefixes(params.rawBody ?? "");
   const stripped = params.isGroup
     ? stripMentions(raw, params.ctx, params.cfg, params.agentId)
-    : raw;
+    : raw; // 作用：群聊里通常会包含 @bot，先 stripMentions(...) 才能正确解析命令；私聊则直接用 raw。
   const trimmed = stripped.trim();
   if (!trimmed) {
     return undefined;
@@ -120,6 +123,7 @@ export const handleCompactCommand: CommandHandler = async (params) => {
     : "Compaction failed";
   if (result.ok && result.compacted) {
     await incrementCompactionCount({
+      // 作用：把“压缩次数 + 压缩后 tokens”等写回 session store。
       sessionEntry: params.sessionEntry,
       sessionStore: params.sessionStore,
       sessionKey: params.sessionKey,
