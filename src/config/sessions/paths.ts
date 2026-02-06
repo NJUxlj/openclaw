@@ -54,6 +54,15 @@ export function resolveSessionFilePath(
   entry?: SessionEntry,
   opts?: { agentId?: string },
 ): string {
+  /*
+  const candidate = entry?.sessionFile?.trim();
+  const：声明常量变量。
+
+  ?. 是 可选链（optional chaining）：
+    entry?.sessionFile：如果 entry 是 undefined/null，整个表达式直接变成 undefined，不会报错。
+    entry?.sessionFile?.trim()：如果 sessionFile 也是 undefined/null，也不会调用 trim()，结果仍是 undefined。
+
+  */
   const candidate = entry?.sessionFile?.trim();
   return candidate ? candidate : resolveSessionTranscriptPath(sessionId, opts?.agentId);
 }

@@ -138,10 +138,10 @@ export function expandToolGroups(list?: string[]) {
   for (const value of normalized) {
     const group = TOOL_GROUPS[value];
     if (group) {
-      expanded.push(...group);
+      expanded.push(...group); // expanded.push(...group);：展开运算符 ...，把 group 数组的每个元素作为独立参数传给 push
       continue;
     }
-    expanded.push(value);
+    expanded.push(value); // 如果 value 不是某个已定义的组名，就把它当作“单个工具名”原样加入结果。
   }
   return Array.from(new Set(expanded));
 }
