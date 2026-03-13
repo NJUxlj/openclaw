@@ -26,6 +26,7 @@ function createProps(overrides: Partial<ChatProps> = {}): ChatProps {
     fallbackStatus: null,
     messages: [],
     toolMessages: [],
+    streamSegments: [],
     stream: null,
     streamStartedAt: null,
     assistantAvatarUrl: null,
@@ -45,6 +46,9 @@ function createProps(overrides: Partial<ChatProps> = {}): ChatProps {
     onSend: () => undefined,
     onQueueRemove: () => undefined,
     onNewSession: () => undefined,
+    agentsList: null,
+    currentAgentId: "",
+    onAgentChange: () => undefined,
     ...overrides,
   };
 }
@@ -188,15 +192,14 @@ describe("chat view", () => {
       renderChat(
         createProps({
           canAbort: true,
+          sending: true,
           onAbort,
         }),
       ),
       container,
     );
 
-    const stopButton = Array.from(container.querySelectorAll("button")).find(
-      (btn) => btn.textContent?.trim() === "Stop",
-    );
+    const stopButton = container.querySelector<HTMLButtonElement>('button[title="Stop"]');
     expect(stopButton).not.toBeUndefined();
     stopButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     expect(onAbort).toHaveBeenCalledTimes(1);
@@ -216,12 +219,70 @@ describe("chat view", () => {
       container,
     );
 
-    const newSessionButton = Array.from(container.querySelectorAll("button")).find(
-      (btn) => btn.textContent?.trim() === "New session",
+    const newSessionButton = container.querySelector<HTMLButtonElement>(
+      'button[title="New session"]',
     );
     expect(newSessionButton).not.toBeUndefined();
     newSessionButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     expect(onNewSession).toHaveBeenCalledTimes(1);
     expect(container.textContent).not.toContain("Stop");
+  });
+
+  it("shows sender labels from sanitized gateway messages instead of generic You", () => {
+    const container = document.createElement("div");
+    render(
+      renderChat(
+        createProps({
+          messages: [
+            {
+              role: "user",
+              content: "hello from topic",
+              senderLabel: "Iris",
+              timestamp: 1000,
+            },
+          ],
+        }),
+      ),
+      container,
+    );
+
+    const senderLabels = Array.from(container.querySelectorAll(".chat-sender-name")).map((node) =>
+      node.textContent?.trim(),
+    );
+    expect(senderLabels).toContain("Iris");
+    expect(senderLabels).not.toContain("You");
+  });
+
+  it("keeps consecutive user messages from different senders in separate groups", () => {
+    const container = document.createElement("div");
+    render(
+      renderChat(
+        createProps({
+          messages: [
+            {
+              role: "user",
+              content: "first",
+              senderLabel: "Iris",
+              timestamp: 1000,
+            },
+            {
+              role: "user",
+              content: "second",
+              senderLabel: "Joaquin De Rojas",
+              timestamp: 1001,
+            },
+          ],
+        }),
+      ),
+      container,
+    );
+
+    const groups = container.querySelectorAll(".chat-group.user");
+    expect(groups).toHaveLength(2);
+    const senderLabels = Array.from(container.querySelectorAll(".chat-sender-name")).map((node) =>
+      node.textContent?.trim(),
+    );
+    expect(senderLabels).toContain("Iris");
+    expect(senderLabels).toContain("Joaquin De Rojas");
   });
 });
